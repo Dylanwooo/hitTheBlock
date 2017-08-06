@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>打砖块小游戏</title>
+    <script language="javascript">
+
+
+
+        //储存敌人的数组
+        var mydiv = new Array()
+        var fenshu = 0;//记录分数
+        var baoxian = 10;//保险个数
+        function $(id){
+            return document.getElementById(id);
+        }
+
+        function currentStyle(element) {
+            return element.currentStyle || document.defaultView.getComputedStyle(element, null);
+        }
+
+        //移动DIV
+        function MoveDiv(divname,v){
+            if($(divname) != null){
+                var l = parseInt($(divname).style.left);
+                var h = parseInt($(divname).style.top);
+                //document.title = [l, h];
+                switch(v){
+                    case 1:
+                        if(h>0){
+                            $(divname).style.top =h-20+"px";
+                        }
+                        break;
+                    case 2:
+                        if(h<380){
+                            $(divname).style.top =h+20+"px";
+                        }        break;
+                    case 3:
+                        if(l<380){
+                            $(divname).style.left = l+20+"px";
+                        }
+                        break;
+                    case 4:
+                        if(l>0){
+                            $(divname).style.left = l-20+"px";
+                        }
+                        break;
+                }
+            }
+        }
+        //碰撞时销毁DIV
+        function DisDiv(name){
+            var l = parseInt($(name).style.left);
+            var h = parseInt($(name).style.top);
+            for (var i in mydiv){
+                if($(mydiv[i]) !=null){
+                    var tl = parseInt($(mydiv[i]).style.left);
+                    var th = parseInt($(mydiv[i]).style.top);
+                    if(l==tl&&h==th){
+                        $(mydiv[i]).parentNode.removeChild($(mydiv[i]));
+                        //$(mydiv[i]).removeNode(true);
+                        $(name).parentNode.removeChild($(name));
+                        //$(name).removeNode(true);
+                        mydiv.splice(i,1);
+                        fenshu++;
+                        $("fspan").innerHTML =fenshu;
+                        break;
+                    }
+                }
+            }
+        }
+        //保险DIV在碰撞时只消灭敌方保留自己
+        function BaoXianDisDiv(name){
+            var h = parseInt($(name).style.top);
+            for (var i in mydiv){
+                if($(mydiv[i]) !=null){
+                    var th = parseInt($(mydiv[i]).style.top);
+                    if(h==th){
+                        $(mydiv[i]).parentNode.removeChild($(mydiv[i]));
+                        //$(mydiv[i]).removeNode(true);
+                        mydiv.splice(i,1);
+                        fenshu++;
+                        $("fspan").innerHTML =fenshu;
+                    }
+                }
+            }
+        }
+
+        var MoveDivTem=0;
+        //自动上下移动（测试用游戏中没用到）
+        function UpDownDiv(divname){
+            var h = parseInt($(divname).style.top);
+            if(h==0){
+                MoveDivTem = 0;
+            }
+            if(h==380){
+                MoveDivTem = 1;
+            }
+            if(MoveDivTem ==0){
+                MoveDiv(divname,2);
+            }else{
+                MoveDiv(divname,1);
+            }
+        }
+        //向上移动div我方子弹
+        //kind区分是否是保险是保险为1其他未我方子弹
+        function UpDiv(divname,kind){
+            if($(divname) != null){
+                var h = parseInt($(divname).style.top);
+                if(h==0){
+                    //$(divname).removeNode(true);
+                    $(divname).parentNode.removeChild($(divname));
+                }else{
+                    if(kind == 1){
+                        BaoXianDisDiv(divname);
+                    }else{
+                        DisDiv(divname);
+                    }
+
+                    MoveDiv(divname,1);
+
+                }
+            }
+        }
+
+        //向下移动div敌方自动移动
+        function DownDiv(divname){
+            if($(divname) != null){
+                var h = parseInt($(divname).style.top);
+                if(h==380){
+                    //$(divname).removeNode(true);
+                    $(divname).parentNode.removeChild($(divname));
+                }else{
+                    MoveDiv(divname,2);
+                }
+            }
+        }
+
+        //div创建工厂
+        //dw代表是我方还是敌方，敌方存入数组,1我方，0敌方
+        function DivCreate(w,h,l,t,color,divname,dw){
+            //var stystr = "width:"+w+"; height:"+h+"; background-color:"+color+";position:absolute;left:"+l+";top:"+t;
+            var testDiv=document.createElement("div");
+            //testDiv.setAttribute("style",stystr);
+            testDiv.style.width = w;
+            testDiv.style.height = h;
+            testDiv.style.backgroundColor = color;
+            testDiv.style.position = "absolute";
+            testDiv.style.left = l;
+            testDiv.style.top = t;
+
+            var name =divname+Math.round(Math.random()*10000)
+            testDiv.setAttribute("id",name);
+            var obj=$("alldiv")
+            obj.appendChild(testDiv);
+            if(dw==0){
+                mydiv.push(name);
+            }
+            return name;
+        }
+
+        //空格开枪
+        function ShootDiv(){
+            var Shooting=DivCreate("20px","20px",$("dd").style.left,$("dd").style.top,"#300","div",1);
+            setInterval("UpDiv('"+Shooting+"',0)",50);
+
+        }
+        //敌方DIV随机出现位置1-19并随机创建count个
+        function RandomDiV(count){
+            for(var i=0;i<count;i++){
+                var Shooting=DivCreate("20px","20px",Math.round(Math.random()*19)*20+"px","0px","#300","ddiv",0);
+                setInterval("DownDiv('"+Shooting+"')",200);
+            }
+
+        }
+        //创建保险并向上移动
+        function BaoXian(){
+            if(baoxian!=0){
+                baoxian--;
+                $("bspan").innerHTML =baoxian;
+                var Shooting=DivCreate("400px","20px","0px","380px","#F99","bxdiv",4);
+                setInterval("UpDiv('"+Shooting+"',1)",50);
+            }
+        }
+        function keyenvet(e){
+            var l = parseInt($("dd").style.left);
+            var h = parseInt($("dd").style.top);
+            if (!e) e = window.event;
+            switch (e.keyCode || e.which || e.charCode) {
+                    //case 38: MoveDiv("dd",1);break;//上
+                    //case 40: MoveDiv("dd",2);break;//下
+                case 39: MoveDiv("dd",3);break;//左
+                case 37: MoveDiv("dd",4);break;//右
+                case 32: ShootDiv(); break;//空格，开枪
+                case 90: BaoXian(); break;//z键，放保险
+            }
+        }
+        //让敌人移动,同时出现的人个数
+        function CreatEnemy(){
+            RandomDiV(6);
+        }
+
+        function AddBaoXian(){
+            baoxian++;
+            $("bspan").innerHTML =baoxian;
+        }
+        document.onkeydown =keyenvet;
+        //问题设法停止setInterval
+    </script>
+</head>
+
+<body onload="">
+<div id="alldiv" style="width:800px; height:800px; background-color:deeppink;position:absolute;">
+    <div id="dd" style="width:20px; height:20px; background-color:black;position:absolute;left:140px;top:380px"></div>
+
+</div>
+<span id="bspan" style="position:absolute;left:820px;top:360px">10</span><span style="position:absolute;left:840px;top:360px">保险</span><a href="javascript:" onclick="AddBaoXian()"  style="position:absolute;left:880px;top:360px">增加一个</a>
+<span id="fspan" style="position:absolute;left:820px;top:380px">0</span><span style="position:absolute;left:850px;top:380px">分</span>
+</body>
+<script type="text/javascript">
+    setInterval("CreatEnemy()",1000);
+</script>
+</html>
